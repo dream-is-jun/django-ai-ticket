@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+    {{ ticket.title }}｜AI 智能工单系统
+{% endblock %}
+
+
+{% block content %}
+<div class="page-card">
+    <div
+        class="d-flex justify-content-between
+               align-items-center mb-4"
+    >
+        <a
+            href="{% url 'tickets:ticket_list' %}"
+            class="btn btn-outline-secondary btn-sm"
+        >
+            返回工单列表
+        </a>
+
+        {% if ticket.creator_id == user.id and ticket.status == "pending" %}
+            <div class="d-flex gap-2">
+                <a
+                    href="{% url 'tickets:ticket_update' ticket.pk %}"
+                    class="btn btn-primary btn-sm"
+                >
+                    修改工单
+                </a>
+
+                <a
+                    href="{% url 'tickets:ticket_delete' ticket.pk %}"
+                    class="btn btn-danger btn-sm"
+                >
+                    删除工单
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div
+        class="d-flex justify-content-between
+               align-items-start mb-4"
+    >
+        <div>
+            <h2>
+                #{{ ticket.id }}
+                {{ ticket.title }}
+            </h2>
+
+            <p class="text-secondary mb-0">
+                创建人：
+                {{ ticket.creator.username }}
+            </p>
+        </div>
+
+        <span class="badge text-bg-primary">
+            {{ ticket.get_status_display }}
+        </span>
+    </div>
+
+    {% if user.is_staff %}
+        <div class="border rounded p-4 mb-4 bg-light">
+            <h5 class="mb-3">
+                客服处理
+            </h5>
+
+            <form
+                method="post"
+                action="{% url 'tickets:staff_ticket_update' ticket.pk %}"
+            >
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            处理状态
+                        </label>
+
+                        {{ staff_form.status }}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            问题分类
+                        </label>
+
+                        {{ staff_form.category }}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            优先级
+                        </label>
+
+                        {{ staff_form.priority }}
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-warning"
+                >
+                    更新处理信息
+                </button>
+            </form>
+            <div class="d-flex gap-2 mt-3">
+    <form
+        method="post"
+        action="{% url 'tickets:ticket_ai_analyze' ticket.pk %}"
+    >
+        {% csrf_token %}
+
+        <button
+            type="submit"
+            class="btn btn-success"
+        >
+            AI 分析工单
+        </button>
+    </form>
+
+    {% if ticket.ai_suggested_reply %}
+        <form
+            method="post"
+            action="{% url 'tickets:ticket_use_ai_reply' ticket.pk %}"
+        >
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="btn btn-outline-success"
+            >
+                采用 AI 建议回复
+            </button>
+        </form>
+    {% endif %}
+</div>
+            
+        </div>
+    {% endif %}
+
+    {% if ticket.creator_id == user.id and ticket.status != "pending" %}
+        <div class="alert alert-info">
+            当前工单已经进入处理流程，
+            不能再修改或删除。
+        </div>
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <strong>问题分类：</strong>
+            {{ ticket.get_category_display }}
+        </div>
+
+        <div class="col-md-4">
+            <strong>优先级：</strong>
+            {{ ticket.get_priority_display }}
+        </div>
+
+        <div class="col-md-4">
+            <strong>创建时间：</strong>
+            {{ ticket.created_at|date:"Y-m-d H:i" }}
+        </div>
+    </div>
+
+    <hr>
+
+    <h5>问题描述</h5>
+
+    <div class="mb-4">
+        {{ ticket.description|linebreaks }}
+    </div>
+
+    {% if ticket.ai_summary %}
+        <hr>
+
+        <h5>AI 问题摘要</h5>
+
+        <div class="alert alert-light border">
+            {{ ticket.ai_summary|linebreaks }}
+        </div>
+    {% endif %}
+
+    {% if ticket.ai_suggested_reply %}
+        <hr>
+
+        <h5>AI 建议回复</h5>
+
+        <div class="alert alert-light border">
+            {{ ticket.ai_suggested_reply|linebreaks }}
+        </div>
+    {% endif %}
+
+    <hr>
+
+    <h5 class="mb-3">
+        工单留言
+    </h5>
+
+    {% for comment in ticket.comments.all %}
+        <div class="border rounded p-3 mb-3 bg-light">
+            <div
+                class="d-flex justify-content-between"
+            >
+                <strong>
+                    {{ comment.author.username }}
+
+                    {% if comment.author.is_staff %}
+                        <span class="badge text-bg-warning">
+                            客服
+                        </span>
+                    {% endif %}
+                </strong>
+
+                <span class="text-secondary">
+                    {{ comment.created_at|date:"Y-m-d H:i" }}
+                </span>
+            </div>
+
+            <div class="mt-2">
+                {{ comment.content|linebreaks }}
+            </div>
+        </div>
+
+    {% empty %}
+        <div class="alert alert-secondary">
+            当前工单还没有留言。
+        </div>
+    {% endfor %}
+
+    {% if ticket.status != "closed" or user.is_staff %}
+        <div class="border rounded p-4 mt-4">
+            <h5 class="mb-3">
+                追加留言
+            </h5>
+
+            <form
+                method="post"
+                action="{% url 'tickets:comment_create' ticket.pk %}"
+            >
+                {% csrf_token %}
+
+                {{ comment_form.content }}
+
+                <button
+                    type="submit"
+                    class="btn btn-primary mt-3"
+                >
+                    提交留言
+                </button>
+            </form>
+        </div>
+
+    {% else %}
+        <div class="alert alert-secondary mt-4">
+            当前工单已经关闭，不能继续留言。
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

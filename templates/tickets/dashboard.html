@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+    数据看板｜AI 智能工单系统
+{% endblock %}
+
+
+{% block content %}
+<div class="mb-4">
+    <h2>工单数据看板</h2>
+
+    <p class="text-secondary">
+        {% if user.is_staff %}
+            当前显示系统中的全部工单。
+        {% else %}
+            当前只统计你自己创建的工单。
+        {% endif %}
+    </p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="page-card h-100">
+            <div class="text-secondary">
+                工单总数
+            </div>
+
+            <div class="display-5 fw-bold">
+                {{ total_count }}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="page-card h-100">
+            <div class="text-secondary">
+                紧急工单
+            </div>
+
+            <div class="display-5 fw-bold text-danger">
+                {{ urgent_count }}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="page-card h-100">
+            <div class="text-secondary">
+                当前用户
+            </div>
+
+            <div class="h3 mt-3">
+                {{ user.username }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="page-card h-100">
+            <h4 class="mb-3">
+                按状态统计
+            </h4>
+
+            {% for item in status_cards %}
+                <div
+                    class="d-flex justify-content-between
+                           border-bottom py-2"
+                >
+                    <span>{{ item.label }}</span>
+                    <strong>{{ item.count }}</strong>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="page-card h-100">
+            <h4 class="mb-3">
+                按分类统计
+            </h4>
+
+            {% for item in category_cards %}
+                <div
+                    class="d-flex justify-content-between
+                           border-bottom py-2"
+                >
+                    <span>{{ item.label }}</span>
+                    <strong>{{ item.count }}</strong>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="page-card mt-4">
+    <h4 class="mb-3">
+        最近工单
+    </h4>
+
+    {% for ticket in recent_tickets %}
+        <div
+            class="d-flex justify-content-between
+                   border-bottom py-2"
+        >
+            <a
+                href="{% url 'tickets:ticket_detail' ticket.pk %}"
+            >
+                #{{ ticket.pk }} {{ ticket.title }}
+            </a>
+
+            <span class="text-secondary">
+                {{ ticket.created_at|date:"Y-m-d H:i" }}
+            </span>
+        </div>
+
+    {% empty %}
+        <p class="text-secondary">
+            暂无工单。
+        </p>
+    {% endfor %}
+</div>
+{% endblock %}

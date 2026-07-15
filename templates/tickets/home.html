@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+    首页｜AI 智能工单系统
+{% endblock %}
+
+
+{% block content %}
+<div class="page-card text-center py-5">
+    <h1 class="mb-4">
+        AI 智能工单管理系统
+    </h1>
+
+    <p class="lead text-secondary">
+        提交问题、跟踪处理状态，
+        后续将接入通义千问进行智能分析。
+    </p>
+
+    <div class="mt-4">
+        <a
+            class="btn btn-primary me-2"
+            href="{% url 'tickets:register' %}"
+        >
+            注册账号
+        </a>
+
+        <a
+            class="btn btn-outline-secondary"
+            href="{% url 'login' %}"
+        >
+            已有账号，立即登录
+        </a>
+    </div>
+</div>
+{% endblock %}
